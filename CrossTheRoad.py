@@ -1,3 +1,5 @@
+from tkinter import messagebox
+
 import pygame as pg
 from pygame.locals import *
 
@@ -12,6 +14,10 @@ clock = pg.time.Clock()
 # mengatur warna dalam RGB
 WHITE_COLOR = (255, 255, 255)
 BLACK_COLOR = (0, 0, 0)
+
+# Initialize font
+pg.font.init()
+font = pg.font.SysFont('comicsans', 75)
 
 
 # Class untuk menampilkan layar
@@ -35,15 +41,18 @@ class Game:
         # change size of image to fit the width and height
         self.image = pg.transform.scale(background_image, (width, height))
 
-    def run_game_loop(self):
+    def run_game_loop(self, lvl_spd):
         is_game_over = False
+        is_win = False
         direction = 0
 
         # membuat instance dari class PlayerCharacter dan EnemyCharacter serta harta karun untuk menampilkan gambar
         # gambar, posisi koordinat x, posisi koordinat x, width karakter, height karakter
         player_character = PlayerCharacter('asset/pemain.png', 375, 700, 50, 50)
         enemy_character = EnemyCharacter('asset/musuh2.png', 225, 400, 50, 50)
+        enemy_character.SPEED += lvl_spd
         one_piece = GameObject('asset/onepiece.png', 400, 50, 50, 50)
+        print(enemy_character.SPEED)
 
         while not is_game_over:
             for event in pg.event.get():  # mengambil event dari keyboard
@@ -71,6 +80,8 @@ class Game:
                     # jika tombol atas atau bawah dilepas, maka karakter berhenti
                     if event.key == pg.K_UP or event.key == pg.K_DOWN:
                         direction = 0
+                    elif event.key == pg.K_LEFT or event.key == pg.K_RIGHT:
+                        direction = 0
                 print(event)
 
             # me-refresh background tiap kali karakter berjalan
@@ -90,14 +101,25 @@ class Game:
             # collision detection
             if player_character.detection_collision(enemy_character):
                 is_game_over = True
-                print("Game Over")
+                is_win = False
+                messagebox.showinfo("You lose!", "Try Again!")
+                pg.display.update()
+                clock.tick(1)
+
             elif player_character.detection_collision(one_piece):
                 is_game_over = True
-                print("You Win")
+                is_win = True
+                messagebox.showinfo("You won!", "Congratulations, you have won the game!")
+                pg.display.update()
+                clock.tick(1)
 
             # update layar
             pg.display.update()
             clock.tick(self.TICK_RATE)
+
+        if is_win:
+            lvl_spd += 5
+            self.run_game_loop(lvl_spd)
 
 
 # Superclass for character
@@ -141,7 +163,7 @@ class PlayerCharacter(GameObject):
                 self.y_pos = max_height - 70
         elif direction == 2:  # when left key is pressed
             self.x_pos -= self.SPEED
-            if self.x_pos <= 0:  # left boundary
+            if self.x_pos <= 20:  # left boundary
                 self.x_pos = 0
         elif direction == -2:  # when right key is pressed
             self.x_pos += self.SPEED
@@ -188,7 +210,8 @@ class EnemyCharacter(GameObject):
 pg.init()
 # buat instance game
 new_game = Game('asset/background.png', SCREEN_TITLE, SCREEN_WIDTH, SCREEN_HEIGHT)
-new_game.run_game_loop()
+# run game loop
+new_game.run_game_loop(0)
 
 # keluar dari game
 pg.quit()
